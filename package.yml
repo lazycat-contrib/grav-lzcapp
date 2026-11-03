@@ -1,6 +1,6 @@
 package: community.lazycat.app.grav
 name: Grav
-version: 0.0.0
+version: 2.2.22
 description: "Flat-file CMS: build fast sites and blogs from Markdown, no database needed."
 min_os_version: "1.5.0"
 homepage: https://getgrav.org/
