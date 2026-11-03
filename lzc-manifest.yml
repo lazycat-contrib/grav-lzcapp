@@ -1,0 +1,52 @@
+application:
+  subdomain: grav
+  multi_instance: false
+  # Grav's admin panel has its own login, so it is exposed directly rather than
+  # behind the platform login gate.
+  public_path:
+    - /
+  upstreams:
+    - location: /package-licenses/
+      backend: file:///lzcapp/pkg/content/licenses/
+    - location: /
+      backend: http://grav:80/
+
+services:
+  grav:
+    # upstream: linuxserver/grav:2.2.22
+    image: docker.1ms.run/linuxserver/grav:2.2.22
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Shanghai
+    binds:
+      # The image's own init moves user/, logs/ and backup/ out of the web root
+      # into /config/www and symlinks them back, so /config is where site
+      # content, configuration and accounts actually persist. Mounting the web
+      # root instead would shadow the application shipped in the image.
+      - /lzcapp/var/config:/config
+
+usage: |
+  Grav 是扁平化（flat-file）CMS：页面用 Markdown 写，配置和数据都存在文件里，**不需要数据库**。所以它装起来快、备份简单（打包目录即可），也跑得快。适合个人博客、作品集、文档站、小型企业站。
+
+  使用方法：
+  1. 打开应用会看到站点首页（自带一个示例主题）。
+  2. 进管理后台：在网址后面加 `/admin`，例如 `https://你的域名/admin`。
+     **第一次访问会引导创建管理员账号**（Grav 出厂不带任何账号，这是它内置的登录插件行为）。
+  3. 建好账号后就能在后台里增删页面、改主题、装插件，也可以直接在后台编辑 Markdown。
+  4. 想改主题或装插件，在后台的 Themes / Plugins 里点几下就行。
+
+  数据与安全：
+  - **持久化的是 /config**：站点内容、配置、插件和账号都经过它的
+     `www/user`、`www/logs`、`www/backup` 三个子目录保存（镜像启动时会把这几个目录
+     从网页根目录挪到 /config 下并建立软链）。卸载会一并删除，请定期备份 /config。
+  - **没有内置默认口令**：管理员账号由你在首次访问时自己创建。
+  - 应用直接对外开放，由 Grav 自己的登录页鉴权：
+    自带账号体系的服务再套一层平台鉴权会造成重复登录，所以用 public_path。
+
+  说明：
+  - 单容器，**不需要数据库**；站点内容都是文件，备份就是打包 /config。
+  - 首次启动会自动把示例站点铺好，打开即可看到首页。
+  - 界面和管理后台支持中文。
+  - 未做真机验证：创建管理员、发布页面、切换主题以及重启后数据留存
+    均未在设备上实测。
